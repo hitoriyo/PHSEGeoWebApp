@@ -1,0 +1,1405 @@
+<!DOCTYPE html><html lang="en"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geography PSHE Study App | 地理個人社會及人文教育學習應用</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .card-flip {
+            perspective: 1000px;
+            height: 250px;
+        }
+        .card-flip-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card-flip.flipped .card-flip-inner {
+            transform: rotateY(180deg);
+        }
+        .card-flip-front, .card-flip-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .card-flip-back {
+            transform: rotateY(180deg);
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .quiz-option {
+            transition: all 0.3s ease;
+        }
+        .quiz-option:hover {
+            transform: translateX(4px);
+        }
+        .correct { 
+            background-color: #22c55e !important; 
+            color: white !important;
+        }
+        .incorrect { 
+            background-color: #ef4444 !important; 
+            color: white !important;
+        }
+        .nav-tab {
+            transition: all 0.3s ease;
+        }
+        .nav-tab.active {
+            background: linear-gradient(135deg, #5D5CDE, #7c3aed);
+            color: white;
+            box-shadow: 0 4px 15px rgba(93, 92, 222, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-800 dark:to-purple-800 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex flex-col sm:flex-row justify-between items-center">
+                <div class="text-center sm:text-left">
+                    <h1 class="text-2xl sm:text-3xl font-bold mb-2" id="app-title">
+                        Geography Study App
+                    </h1>
+                    <p class="text-blue-100 dark:text-blue-200" id="app-subtitle">
+                        Fieldwork Investigation &amp; Assessment Guide
+                    </p>
+                </div>
+                <button id="language-toggle" class="mt-4 sm:mt-0 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-all duration-300 backdrop-blur-sm">
+                    <span id="lang-text">中文</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-40 border-b border-gray-200 dark:border-gray-700">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-wrap gap-2 py-4">
+                <button class="nav-tab active px-4 py-2 rounded-lg text-sm font-medium" onclick="showSection('topics')" id="nav-topics">
+                    Topics
+                </button>
+                <button class="nav-tab px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700" onclick="showSection('flashcards')" id="nav-flashcards">
+                    Flashcards
+                </button>
+                <button class="nav-tab px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700" onclick="showSection('quiz')" id="nav-quiz">
+                    Quiz
+                </button>
+                <button class="nav-tab px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700" onclick="showSection('progress')" id="nav-progress">
+                    Progress
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Topics Overview Section -->
+        <section id="topics-section" class="fade-in">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold mb-4 text-center" id="topics-heading">Study Topics</h2>
+                <p class="text-gray-600 dark:text-gray-400 text-center max-w-3xl mx-auto" id="topics-desc">
+                    Explore 7 comprehensive geography units covering fieldwork investigations and assessment methods.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="topics-grid">
+                <!-- Topics will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Flashcards Section -->
+        <section id="flashcards-section" class="hidden">
+            <div class="mb-8 text-center">
+                <h2 class="text-3xl font-bold mb-4" id="flashcards-heading">Interactive Flashcards</h2>
+                <div class="mb-6">
+                    <select id="topic-selector" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select a topic...</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="flashcard-container" class="max-w-2xl mx-auto">
+                <div id="no-topic-selected" class="text-center text-gray-500 dark:text-gray-400 py-12">
+                    <p id="select-topic-text">Please select a topic to view flashcards</p>
+                </div>
+                
+                <div id="flashcard-content" class="hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <span id="card-counter" class="text-gray-600 dark:text-gray-400">Card 1 of 5</span>
+                        <div class="flex gap-2">
+                            <button id="prev-card" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg disabled:opacity-50">←</button>
+                            <button id="next-card" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg disabled:opacity-50">→</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card-flip" id="flashcard" onclick="flipCard()">
+                        <div class="card-flip-inner">
+                            <div class="card-flip-front bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                                <div class="text-center">
+                                    <h3 class="text-xl font-bold mb-4" id="card-question">Question will appear here</h3>
+                                    <p class="text-sm opacity-80">Click to reveal answer</p>
+                                </div>
+                            </div>
+                            <div class="card-flip-back bg-gradient-to-br from-green-500 to-teal-600 text-white">
+                                <div class="text-center">
+                                    <h3 class="text-lg font-bold mb-4" id="card-answer">Answer will appear here</h3>
+                                    <p class="text-sm opacity-80">Click to see question</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-6">
+                        <button onclick="shuffleCards()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg" id="shuffle-btn">
+                            Shuffle Cards
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quiz Section -->
+        <section id="quiz-section" class="hidden">
+            <div class="mb-8 text-center">
+                <h2 class="text-3xl font-bold mb-4" id="quiz-heading">Knowledge Quiz</h2>
+                <div class="mb-6">
+                    <select id="quiz-topic-selector" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select a topic...</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="quiz-container" class="max-w-3xl mx-auto">
+                <div id="quiz-start" class="text-center">
+                    <p id="quiz-instruction" class="text-gray-600 dark:text-gray-400 mb-6">Select a topic to begin the quiz</p>
+                    <button id="start-quiz-btn" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg text-lg font-semibold disabled:opacity-50" disabled="">
+                        Start Quiz
+                    </button>
+                </div>
+                
+                <div id="quiz-active" class="hidden">
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <span id="question-counter" class="text-gray-600 dark:text-gray-400">Question 1 of 10</span>
+                            <span id="score-display" class="text-gray-600 dark:text-gray-400">Score: 0/0</span>
+                        </div>
+                        <div class="bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div id="progress-bar" class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg mb-6">
+                        <h3 id="current-question" class="text-xl font-semibold mb-6">Question will appear here</h3>
+                        <div id="quiz-options" class="space-y-3">
+                            <!-- Options will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button id="next-question-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hidden">
+                            Next Question
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="quiz-results" class="hidden text-center">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-8 shadow-lg">
+                        <h3 class="text-2xl font-bold mb-4" id="results-title">Quiz Complete!</h3>
+                        <div class="text-4xl font-bold text-blue-500 mb-4" id="final-score">8/10</div>
+                        <p id="results-message" class="text-gray-600 dark:text-gray-400 mb-6">Great job! You have a solid understanding of this topic.</p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <button onclick="retakeQuiz()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg" id="retake-btn">
+                                Retake Quiz
+                            </button>
+                            <button onclick="showSection('flashcards')" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg" id="study-more-btn">
+                                Study More
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress Section -->
+        <section id="progress-section" class="hidden">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold mb-4 text-center" id="progress-heading">Learning Progress</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+                    <h3 class="text-xl font-bold mb-4" id="overall-progress">Overall Progress</h3>
+                    <div class="space-y-4" id="progress-list">
+                        <!-- Progress items will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+                    <h3 class="text-xl font-bold mb-4" id="recent-activity">Recent Activity</h3>
+                    <div class="space-y-3" id="activity-list">
+                        <!-- Activity items will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Language system
+        let currentLanguage = 'en';
+        
+        const translations = {
+            en: {
+                'app-title': 'Geography Study App',
+                'app-subtitle': 'Fieldwork Investigation & Assessment Guide',
+                'lang-text': '中文',
+                'nav-topics': 'Topics',
+                'nav-flashcards': 'Flashcards',
+                'nav-quiz': 'Quiz',
+                'nav-progress': 'Progress',
+                'topics-heading': 'Study Topics',
+                'topics-desc': 'Explore 7 comprehensive geography units covering fieldwork investigations and assessment methods.',
+                'flashcards-heading': 'Interactive Flashcards',
+                'select-topic-text': 'Please select a topic to view flashcards',
+                'shuffle-btn': 'Shuffle Cards',
+                'quiz-heading': 'Knowledge Quiz',
+                'quiz-instruction': 'Select a topic to begin the quiz',
+                'start-quiz-btn': 'Start Quiz',
+                'retake-btn': 'Retake Quiz',
+                'study-more-btn': 'Study More',
+                'progress-heading': 'Learning Progress',
+                'overall-progress': 'Overall Progress',
+                'recent-activity': 'Recent Activity',
+                'results-title': 'Quiz Complete!'
+            },
+            zh: {
+                'app-title': '地理學習應用程式',
+                'app-subtitle': '實地考察調查及評估指引',
+                'lang-text': 'English',
+                'nav-topics': '主題',
+                'nav-flashcards': '閃卡',
+                'nav-quiz': '測驗',
+                'nav-progress': '進度',
+                'topics-heading': '學習主題',
+                'topics-desc': '探索7個全面的地理單元，涵蓋實地考察調查和評估方法。',
+                'flashcards-heading': '互動閃卡',
+                'select-topic-text': '請選擇主題以查看閃卡',
+                'shuffle-btn': '洗牌',
+                'quiz-heading': '知識測驗',
+                'quiz-instruction': '選擇主題開始測驗',
+                'start-quiz-btn': '開始測驗',
+                'retake-btn': '重新測驗',
+                'study-more-btn': '繼續學習',
+                'progress-heading': '學習進度',
+                'overall-progress': '整體進度',
+                'recent-activity': '最近活動',
+                'results-title': '測驗完成！'
+            }
+        };
+
+        // Geography curriculum data
+        const geographyData = {
+            topics: [
+                {
+                    id: 'unit1',
+                    title: { en: 'Opportunities and Risks', zh: '機會與風險' },
+                    subtitle: { en: 'Living in disaster-prone areas', zh: '居住在災害頻生的地區' },
+                    description: { 
+                        en: 'Explore plate boundaries, earthquakes, volcanic eruptions, tsunamis and human responses to natural disasters.',
+                        zh: '探索板塊邊界、地震、火山爆發、海嘯以及人類對自然災害的反應。'
+                    },
+                    color: 'from-red-500 to-orange-500'
+                },
+                {
+                    id: 'unit2a',
+                    title: { en: 'River Environments', zh: '河流環境' },
+                    subtitle: { en: 'Managing river and coastal environments', zh: '管理河流和海岸環境' },
+                    description: { 
+                        en: 'Study river morphology, water flow, sediment transport, human impacts on river environments and management strategies.',
+                        zh: '研究河流形態、水流、沉積物搬運、人類對河流環境的影響及管理策略。'
+                    },
+                    color: 'from-blue-500 to-cyan-500'
+                },
+                {
+                    id: 'unit2b',
+                    title: { en: 'Coastal Environments', zh: '海岸環境' },
+                    subtitle: { en: 'Managing river and coastal environments', zh: '管理河流和海岸環境' },
+                    description: { 
+                        en: 'Examine wave action, coastal landforms, beach profiles, human activities and coastal management challenges.',
+                        zh: '檢視海浪作用、海岸地貌、海灘剖面、人類活動及海岸管理挑戰。'
+                    },
+                    color: 'from-teal-500 to-blue-600'
+                },
+                {
+                    id: 'unit3',
+                    title: { en: 'Changing Industrial Location', zh: '轉變中的工業區位' },
+                    subtitle: { en: 'How and why industrial location changes', zh: '工業區位如何及為何改變' },
+                    description: { 
+                        en: 'Analyze factors affecting industrial location, globalization impacts, and technological influences on manufacturing.',
+                        zh: '分析影響工業區位的因素、全球化影響以及技術對製造業的影響。'
+                    },
+                    color: 'from-purple-500 to-indigo-500'
+                },
+                {
+                    id: 'unit4',
+                    title: { en: 'Sustainable Cities', zh: '可持續發展的城市' },
+                    subtitle: { en: 'Environment vs Urban Development', zh: '環境保育與城市發展' },
+                    description: { 
+                        en: 'Investigate urban growth, land use patterns, city problems, solutions and sustainable development concepts.',
+                        zh: '調查城市增長、土地利用模式、城市問題、解決方案及可持續發展概念。'
+                    },
+                    color: 'from-green-500 to-emerald-500'
+                },
+                {
+                    id: 'unit5',
+                    title: { en: 'Fighting Famine', zh: '對抗饑荒' },
+                    subtitle: { en: 'Technology vs Food shortage', zh: '科技與糧食短缺' },
+                    description: { 
+                        en: 'Examine agricultural systems, farming factors, technology impacts, and sustainable agriculture practices.',
+                        zh: '檢視農業系統、農業因素、技術影響及可持續農業實踐。'
+                    },
+                    color: 'from-yellow-500 to-orange-500'
+                },
+                {
+                    id: 'unit6',
+                    title: { en: 'Disappearing Green Canopy', zh: '消失中的綠色樹冠' },
+                    subtitle: { en: 'Rainforest deforestation consequences', zh: '雨林砍伐的後果' },
+                    description: { 
+                        en: 'Study tropical rainforest ecosystems, deforestation impacts, and forest management strategies.',
+                        zh: '研究熱帶雨林生態系統、砍伐影響及森林管理策略。'
+                    },
+                    color: 'from-green-600 to-teal-600'
+                },
+                {
+                    id: 'unit7',
+                    title: { en: 'Climate Change', zh: '氣候變化' },
+                    subtitle: { en: 'Long-term fluctuation or irreversible trend?', zh: '長期波動還是不可逆轉趨勢？' },
+                    description: { 
+                        en: 'Analyze local climate variations, urban vs rural climate differences, and urban development impacts.',
+                        zh: '分析本地氣候變化、城市與鄉郊氣候差異以及城市發展影響。'
+                    },
+                    color: 'from-indigo-500 to-purple-600'
+                }
+            ],
+            flashcards: {
+                unit1: [
+                    {
+                        question: { en: 'What are the main types of plate boundaries?', zh: '板塊邊界的主要類型是甚麼？' },
+                        answer: { en: 'Divergent (constructive), Convergent (destructive), and Transform (conservative) boundaries', zh: '發散（建設性）、聚合（破壞性）和轉換（保守性）邊界' }
+                    },
+                    {
+                        question: { en: 'What primary data collection methods are used for studying landforms?', zh: '研究地貌使用甚麼一手數據蒐集方法？' },
+                        answer: { en: 'Field sketching and direct observation of geological features and landscape changes', zh: '實地描繪和直接觀察地質特徵及景觀變化' }
+                    },
+                    {
+                        question: { en: 'How do we study human responses to natural disasters?', zh: '我們如何研究人類對自然災害的反應？' },
+                        answer: { en: 'Through questionnaires, interviews, and land use mapping to understand settlement patterns', zh: '透過問卷調查、訪談和土地利用製圖來了解居住模式' }
+                    },
+                    {
+                        question: { en: 'What evidence shows internal processes at work?', zh: '甚麼證據顯示內部作用過程？' },
+                        answer: { en: 'Volcanic landforms, fault lines, earthquake damage, and tectonic activity indicators', zh: '火山地貌、斷層線、地震損害和構造活動指標' }
+                    },
+                    {
+                        question: { en: 'Why do people continue living in disaster-prone areas?', zh: '為甚麼人們繼續居住在災害頻生的地區？' },
+                        answer: { en: 'Economic opportunities, fertile soils, established communities, and limited alternatives', zh: '經濟機會、肥沃土壤、既有社區和有限的替代選擇' }
+                    }
+                ],
+                unit2a: [
+                    {
+                        question: { en: 'What river morphology measurements are essential for fieldwork?', zh: '實地考察中河流形態的基本測量項目是甚麼？' },
+                        answer: { en: 'Channel width, depth, cross-section, gradient, flow velocity, discharge, and bed roughness', zh: '河道寬度、深度、橫切面、坡度、流速、流量和河床粗糙度' }
+                    },
+                    {
+                        question: { en: 'How do we measure river flow velocity?', zh: '我們如何測量河流流速？' },
+                        answer: { en: 'Using floating objects, measuring tape, and stopwatch to calculate speed over distance', zh: '使用漂浮物、拉尺和計時器來計算距離上的速度' }
+                    },
+                    {
+                        question: { en: 'What tools measure sediment characteristics?', zh: '測量沉積物特徵使用甚麼工具？' },
+                        answer: { en: 'Calipers for size, measuring rulers, grain size charts, and Powers roundness chart', zh: '游標卡尺測量大小、米尺、顆粒大小分類表和鮑爾斯圓度計' }
+                    },
+                    {
+                        question: { en: 'How is water quality assessed in rivers?', zh: '如何評估河流水質？' },
+                        answer: { en: 'Using thermometers, pH strips, turbidity tests, oxygen levels, and biological indicators', zh: '使用溫度計、酸鹼度試紙、混濁度測試、氧氣水平和生物指標' }
+                    },
+                    {
+                        question: { en: 'What human activities impact river environments?', zh: '甚麼人類活動影響河流環境？' },
+                        answer: { en: 'Agriculture, industry, recreation, urban development, and pollution discharge', zh: '農業、工業、康樂活動、城市發展和污染排放' }
+                    }
+                ],
+                unit2b: [
+                    {
+                        question: { en: 'What coastal measurements require transect setup?', zh: '海岸測量需要設置甚麼樣條？' },
+                        answer: { en: 'Beach profiles, gradient measurements, and systematic sampling across shore zones', zh: '海灘剖面、坡度測量和跨岸帶系統抽樣' }
+                    },
+                    {
+                        question: { en: 'How do we measure wave characteristics?', zh: '我們如何測量海浪特徵？' },
+                        answer: { en: 'Wave frequency with stopwatch, swash/backwash strength, and longshore drift direction', zh: '用計時器測量波浪頻率、沖流/回流強度和沿岸漂移方向' }
+                    },
+                    {
+                        question: { en: 'What instruments measure beach morphology?', zh: '測量海灘形態使用甚麼儀器？' },
+                        answer: { en: 'Clinometers, ranging poles, measuring tapes, and leveling instruments', zh: '水平儀、測距桿、拉尺和平水儀器' }
+                    },
+                    {
+                        question: { en: 'How do we analyze beach sediment composition?', zh: '我們如何分析海灘沉積物成分？' },
+                        answer: { en: 'Using calipers, magnifying glasses, grain size charts for particle analysis', zh: '使用游標卡尺、放大鏡、顆粒大小分類表進行顆粒分析' }
+                    },
+                    {
+                        question: { en: 'What human impacts affect coastal environments?', zh: '甚麼人類影響會影響海岸環境？' },
+                        answer: { en: 'Agricultural runoff, recreational activities, development, and pollution sources', zh: '農業徑流、康樂活動、發展項目和污染源' }
+                    }
+                ],
+                unit3: [
+                    {
+                        question: { en: 'What factors determine industrial location?', zh: '甚麼因素決定工業區位？' },
+                        answer: { en: 'Raw materials, labor, transportation, markets, government policy, and technology', zh: '原材料、勞動力、交通運輸、市場、政府政策和技術' }
+                    },
+                    {
+                        question: { en: 'How do we map industrial land use?', zh: '我們如何製作工業土地利用地圖？' },
+                        answer: { en: 'Identify and accurately locate different industrial types and functions on maps', zh: '識別並準確定位地圖上不同的工業類型和功能' }
+                    },
+                    {
+                        question: { en: 'What methods study industrial transformation?', zh: '研究工業轉型使用甚麼方法？' },
+                        answer: { en: 'Surveys, interviews, building assessment, and historical data comparison', zh: '調查、訪談、建築物評估和歷史數據比較' }
+                    },
+                    {
+                        question: { en: 'How do we measure environmental quality in industrial areas?', zh: '我們如何測量工業區的環境質素？' },
+                        answer: { en: 'Noise level meters, air quality instruments, and traffic volume counts', zh: '噪音測量儀、空氣質素儀器和交通流量統計' }
+                    },
+                    {
+                        question: { en: 'What impacts does globalization have on manufacturing?', zh: '全球化對製造業有甚麼影響？' },
+                        answer: { en: 'Location flexibility, supply chain changes, technology adoption, and market access', zh: '區位靈活性、供應鏈變化、技術採用和市場准入' }
+                    }
+                ],
+                unit4: [
+                    {
+                        question: { en: 'How do we study urban land use patterns?', zh: '我們如何研究城市土地利用模式？' },
+                        answer: { en: 'Land use mapping to identify and locate different urban functions accurately', zh: '土地利用製圖以準確識別和定位不同的城市功能' }
+                    },
+                    {
+                        question: { en: 'What criteria assess building and environmental quality?', zh: '評估建築物和環境質素使用甚麼準則？' },
+                        answer: { en: 'Structural condition, maintenance level, amenities, and neighborhood characteristics', zh: '結構狀況、維護水平、設施和鄰里特徵' }
+                    },
+                    {
+                        question: { en: 'How do we measure urban environmental quality?', zh: '我們如何測量城市環境質素？' },
+                        answer: { en: 'Noise meters, air quality sensors, traffic counts, and pedestrian surveys', zh: '噪音計、空氣質素感應器、交通統計和行人調查' }
+                    },
+                    {
+                        question: { en: 'What are key urban sustainability indicators?', zh: '城市可持續發展的關鍵指標是甚麼？' },
+                        answer: { en: 'Green space ratio, public transport access, waste management, energy efficiency', zh: '綠地比例、公共交通接達性、廢物管理、能源效率' }
+                    },
+                    {
+                        question: { en: 'How do we study urban growth processes?', zh: '我們如何研究城市增長過程？' },
+                        answer: { en: 'Historical mapping, development surveys, and demographic analysis', zh: '歷史地圖、發展調查和人口分析' }
+                    }
+                ],
+                unit5: [
+                    {
+                        question: { en: 'What agricultural system components do we measure?', zh: '我們測量農業系統的甚麼組成部分？' },
+                        answer: { en: 'Inputs (seeds, fertilizer), processes (cultivation), and outputs (crop yields)', zh: '投入（種子、肥料）、過程（耕作）和產出（作物產量）' }
+                    },
+                    {
+                        question: { en: 'How do we test soil characteristics?', zh: '我們如何測試土壤特徵？' },
+                        answer: { en: 'Hand texture tests, soil sieves, pH testing kits, and nutrient analysis', zh: '手感測試、土壤篩分、酸鹼度測試套裝和養分分析' }
+                    },
+                    {
+                        question: { en: 'What weather measurements affect agriculture?', zh: '甚麼天氣測量影響農業？' },
+                        answer: { en: 'Temperature, rainfall, humidity, wind speed, and sunshine hours', zh: '溫度、降雨量、濕度、風速和陽光時數' }
+                    },
+                    {
+                        question: { en: 'How do we assess agricultural technology impacts?', zh: '我們如何評估農業技術影響？' },
+                        answer: { en: 'Environmental monitoring, soil erosion observation, and biodiversity surveys', zh: '環境監測、土壤侵蝕觀察和生物多樣性調查' }
+                    },
+                    {
+                        question: { en: 'What defines sustainable agriculture practices?', zh: '甚麼定義可持續農業實踐？' },
+                        answer: { en: 'Soil conservation, biodiversity protection, reduced chemical inputs, water efficiency', zh: '土壤保護、生物多樣性保護、減少化學投入、水資源效率' }
+                    }
+                ],
+                unit6: [
+                    {
+                        question: { en: 'How do we study forest ecosystem structure?', zh: '我們如何研究森林生態系統結構？' },
+                        answer: { en: 'Set up transects and quadrats for systematic sampling and measurement', zh: '設置樣條和樣地進行系統抽樣和測量' }
+                    },
+                    {
+                        question: { en: 'What forest characteristics do we measure?', zh: '我們測量森林的甚麼特徵？' },
+                        answer: { en: 'Tree height, canopy width, trunk circumference, canopy density, ground cover', zh: '樹高、樹冠寬度、樹幹圓周、冠層密度、地面覆蓋' }
+                    },
+                    {
+                        question: { en: 'How do we assess forest biodiversity?', zh: '我們如何評估森林生物多樣性？' },
+                        answer: { en: 'Species identification, counting, classification using quadrat sampling methods', zh: '使用樣方抽樣方法進行物種識別、計數、分類' }
+                    },
+                    {
+                        question: { en: 'What tools measure forest vertical structure?', zh: '測量森林垂直結構使用甚麼工具？' },
+                        answer: { en: 'Measuring tapes, clinometers, light meters for canopy density assessment', zh: '拉尺、傾斜儀、光密度計用於冠層密度評估' }
+                    },
+                    {
+                        question: { en: 'How do we study deforestation impacts?', zh: '我們如何研究砍伐影響？' },
+                        answer: { en: 'Land use mapping, soil quality tests, biodiversity surveys, erosion assessment', zh: '土地利用製圖、土壤質素測試、生物多樣性調查、侵蝕評估' }
+                    }
+                ],
+                unit7: [
+                    {
+                        question: { en: 'What weather elements create microclimates?', zh: '甚麼天氣要素形成微氣候？' },
+                        answer: { en: 'Temperature, humidity, wind speed, precipitation, and solar radiation', zh: '溫度、濕度、風速、降水和太陽輻射' }
+                    },
+                    {
+                        question: { en: 'How do we compare urban vs rural climates?', zh: '我們如何比較城市與鄉郊氣候？' },
+                        answer: { en: 'Weather instrument measurements at multiple locations across different land uses', zh: '在不同土地利用的多個地點使用天氣儀器測量' }
+                    },
+                    {
+                        question: { en: 'What factors influence urban microclimates?', zh: '甚麼因素影響城市微氣候？' },
+                        answer: { en: 'Building density, materials, vehicle numbers, open spaces, vegetation cover', zh: '建築密度、材料、車輛數量、空曠空間、植被覆蓋' }
+                    },
+                    {
+                        question: { en: 'How do we measure urban heat island effects?', zh: '我們如何測量城市熱島效應？' },
+                        answer: { en: 'Temperature readings across urban-rural transects with land use mapping', zh: '沿城鄉樣條進行溫度讀數並配合土地利用製圖' }
+                    },
+                    {
+                        question: { en: 'What criteria assess microclimate factors?', zh: '評估微氣候因素使用甚麼準則？' },
+                        answer: { en: 'Building density scales, surface material types, traffic volume, green space ratio', zh: '建築密度等級、表面材料類型、交通流量、綠地比例' }
+                    }
+                ]
+            },
+            quizzes: {
+                unit1: [
+                    {
+                        question: { en: 'What type of plate boundary creates new oceanic crust?', zh: '甚麼類型的板塊邊界形成新的海洋地殼？' },
+                        options: {
+                            en: ['Convergent boundary', 'Divergent boundary', 'Transform boundary', 'Subduction zone'],
+                            zh: ['聚合邊界', '發散邊界', '轉換邊界', '隱沒帶']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Divergent boundaries create new oceanic crust through seafloor spreading.', zh: '發散邊界通過海底擴張形成新的海洋地殼。' }
+                    },
+                    {
+                        question: { en: 'Which data collection method is most suitable for studying earthquake damage?', zh: '哪種數據蒐集方法最適合研究地震損害？' },
+                        options: {
+                            en: ['Questionnaire surveys', 'Direct observation', 'Laboratory testing', 'Statistical analysis'],
+                            zh: ['問卷調查', '直接觀察', '實驗室測試', '統計分析']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Direct observation allows researchers to see infrastructure damage and landscape changes firsthand.', zh: '直接觀察讓研究人員能夠親眼看到基礎設施損害和景觀變化。' }
+                    },
+                    {
+                        question: { en: 'What is the primary advantage of living near active volcanoes?', zh: '居住在活火山附近的主要優勢是甚麼？' },
+                        options: {
+                            en: ['Stable climate', 'Fertile soils', 'Low population density', 'Reduced earthquake risk'],
+                            zh: ['穩定氣候', '肥沃土壤', '低人口密度', '地震風險降低']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Volcanic soils are highly fertile due to mineral-rich volcanic ash and lava weathering.', zh: '火山土壤因富含礦物的火山灰和熔岩風化而非常肥沃。' }
+                    },
+                    {
+                        question: { en: 'How do geographers study human responses to natural disasters?', zh: '地理學家如何研究人類對自然災害的反應？' },
+                        options: {
+                            en: ['Only through historical records', 'Interviews and questionnaires', 'Satellite imagery only', 'Mathematical models only'],
+                            zh: ['僅通過歷史記錄', '訪談和問卷', '僅衛星圖像', '僅數學模型']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Interviews and questionnaires provide direct insight into human decision-making and responses.', zh: '訪談和問卷直接洞察人類決策和反應。' }
+                    },
+                    {
+                        question: { en: 'What evidence indicates ongoing tectonic activity?', zh: '甚麼證據表明正在進行的構造活動？' },
+                        options: {
+                            en: ['Fossil discoveries', 'Volcanic landforms', 'River meanders', 'Coastal erosion'],
+                            zh: ['化石發現', '火山地貌', '河流曲流', '海岸侵蝕']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Volcanic landforms show evidence of internal Earth processes and plate movements.', zh: '火山地貌顯示地球內部過程和板塊運動的證據。' }
+                    }
+                ],
+                unit2a: [
+                    {
+                        question: { en: 'What is the most important factor in calculating river discharge?', zh: '計算河流流量最重要的因素是甚麼？' },
+                        options: {
+                            en: ['Water temperature', 'Cross-sectional area and velocity', 'Water clarity', 'Bank vegetation'],
+                            zh: ['水溫', '橫切面積和流速', '水的清澈度', '河岸植被']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Discharge = Cross-sectional area × Average velocity', zh: '流量 = 橫切面積 × 平均流速' }
+                    },
+                    {
+                        question: { en: 'Which instrument measures sediment roundness?', zh: '哪種儀器測量沉積物圓度？' },
+                        options: {
+                            en: ['Thermometer', 'Powers roundness chart', 'pH strips', 'Calipers only'],
+                            zh: ['溫度計', '鮑爾斯圓度計', '酸鹼度試紙', '僅游標卡尺']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Powers roundness chart is specifically designed to measure sediment particle roundness.', zh: '鮑爾斯圓度計專門用於測量沉積物顆粒圓度。' }
+                    },
+                    {
+                        question: { en: 'What indicates poor water quality in rivers?', zh: '河流水質差的指標是甚麼？' },
+                        options: {
+                            en: ['High oxygen levels', 'Clear water', 'Low turbidity', 'Absence of aquatic life'],
+                            zh: ['高氧含量', '清澈水質', '低混濁度', '缺乏水生生物']
+                        },
+                        correct: 3,
+                        explanation: { en: 'Absence of aquatic life indicates pollution and poor water quality conditions.', zh: '缺乏水生生物表明污染和水質條件差。' }
+                    },
+                    {
+                        question: { en: 'How do human activities typically affect river environments?', zh: '人類活動通常如何影響河流環境？' },
+                        options: {
+                            en: ['Improve water quality', 'Increase pollution and alter flow patterns', 'Stabilize ecosystems', 'Reduce erosion'],
+                            zh: ['改善水質', '增加污染並改變流動模式', '穩定生態系統', '減少侵蝕']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Human activities often introduce pollutants and modify natural river flow patterns.', zh: '人類活動經常引入污染物並改變自然河流流動模式。' }
+                    },
+                    {
+                        question: { en: 'What sampling method ensures representative data collection across a river?', zh: '甚麼抽樣方法確保河流的代表性數據蒐集？' },
+                        options: {
+                            en: ['Random sampling only', 'Systematic sampling across channel', 'Convenience sampling', 'Single point measurement'],
+                            zh: ['僅隨機抽樣', '跨河道系統抽樣', '便利抽樣', '單點測量']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Systematic sampling across the channel captures variations in flow and conditions.', zh: '跨河道系統抽樣捕捉流動和條件的變化。' }
+                    }
+                ],
+                unit2b: [
+                    {
+                        question: { en: 'What is the primary purpose of setting up beach transects?', zh: '設置海灘樣條的主要目的是甚麼？' },
+                        options: {
+                            en: ['Measure wave height', 'Study systematic changes across beach zones', 'Count marine animals', 'Test water salinity'],
+                            zh: ['測量海浪高度', '研究海灘帶的系統變化', '計算海洋動物', '測試水的鹽度']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Transects allow systematic sampling and measurement across different beach zones.', zh: '樣條允許跨不同海灘帶進行系統抽樣和測量。' }
+                    },
+                    {
+                        question: { en: 'Which tool is essential for measuring beach gradient?', zh: '測量海灘坡度必需的工具是甚麼？' },
+                        options: {
+                            en: ['Magnifying glass', 'Clinometer', 'pH strips', 'Calipers'],
+                            zh: ['放大鏡', '傾斜儀', '酸鹼度試紙', '游標卡尺']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Clinometers measure angles and slopes, essential for beach profile analysis.', zh: '傾斜儀測量角度和坡度，對海灘剖面分析至關重要。' }
+                    },
+                    {
+                        question: { en: 'What does longshore drift measurement reveal?', zh: '沿岸漂移測量揭示甚麼？' },
+                        options: {
+                            en: ['Water temperature changes', 'Sediment transport direction and distance', 'Marine biodiversity', 'Tidal patterns'],
+                            zh: ['水溫變化', '沉積物搬運方向和距離', '海洋生物多樣性', '潮汐模式']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Longshore drift shows how waves transport sediment along the coastline.', zh: '沿岸漂移顯示海浪如何沿海岸線搬運沉積物。' }
+                    },
+                    {
+                        question: { en: 'How do coastal management strategies affect beach morphology?', zh: '海岸管理策略如何影響海灘形態？' },
+                        options: {
+                            en: ['No significant impact', 'Alter natural sediment transport patterns', 'Only improve water quality', 'Reduce wave energy completely'],
+                            zh: ['無顯著影響', '改變自然沉積物搬運模式', '僅改善水質', '完全減少海浪能量']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Management structures can redirect sediment flow and change beach profiles.', zh: '管理結構可以重新導向沉積物流動並改變海灘剖面。' }
+                    },
+                    {
+                        question: { en: 'What indicates healthy coastal water quality?', zh: '甚麼表明健康的海岸水質？' },
+                        options: {
+                            en: ['High turbidity', 'Low dissolved oxygen', 'Diverse marine life presence', 'Strong chemical odors'],
+                            zh: ['高混濁度', '低溶解氧', '海洋生物多樣性豐富', '強烈化學氣味']
+                        },
+                        correct: 2,
+                        explanation: { en: 'Diverse marine life indicates a healthy, unpolluted coastal environment.', zh: '海洋生物多樣性豐富表明健康、未受污染的海岸環境。' }
+                    }
+                ],
+                unit3: [
+                    {
+                        question: { en: 'What is the most significant factor affecting modern high-tech industry location?', zh: '影響現代高科技工業區位最重要的因素是甚麼？' },
+                        options: {
+                            en: ['Raw material proximity', 'Skilled workforce and research facilities', 'Heavy transportation networks', 'Large manufacturing spaces'],
+                            zh: ['原材料接近性', '熟練勞動力和研究設施', '重型運輸網絡', '大型製造空間']
+                        },
+                        correct: 1,
+                        explanation: { en: 'High-tech industries prioritize skilled workers and proximity to research institutions.', zh: '高科技工業優先考慮熟練工人和研究機構的接近性。' }
+                    },
+                    {
+                        question: { en: 'How has globalization affected manufacturing location decisions?', zh: '全球化如何影響製造業區位決策？' },
+                        options: {
+                            en: ['Restricted location choices', 'Increased location flexibility worldwide', 'Focused only on domestic markets', 'Eliminated transportation costs'],
+                            zh: ['限制區位選擇', '增加了全球區位靈活性', '僅專注國內市場', '消除運輸成本']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Globalization allows companies to locate production anywhere with suitable conditions.', zh: '全球化允許公司在任何具有合適條件的地方設置生產。' }
+                    },
+                    {
+                        question: { en: 'What method best studies industrial land use transformation?', zh: '研究工業土地利用轉型的最佳方法是甚麼？' },
+                        options: {
+                            en: ['Only historical maps', 'Combined mapping, surveys, and interviews', 'Laboratory analysis only', 'Theoretical modeling only'],
+                            zh: ['僅歷史地圖', '結合製圖、調查和訪談', '僅實驗室分析', '僅理論建模']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Multiple methods provide comprehensive understanding of industrial changes over time.', zh: '多種方法對工業隨時間的變化提供全面理解。' }
+                    },
+                    {
+                        question: { en: 'Which environmental factor is most commonly measured in industrial areas?', zh: '工業區最常測量的環境因素是甚麼？' },
+                        options: {
+                            en: ['Soil fertility', 'Air quality and noise levels', 'Wildlife populations', 'Water salinity'],
+                            zh: ['土壤肥力', '空氣質素和噪音水平', '野生動物種群', '水的鹽度']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Industrial activities significantly impact air quality and create noise pollution.', zh: '工業活動顯著影響空氣質素並產生噪音污染。' }
+                    },
+                    {
+                        question: { en: 'What characterizes modern industrial location patterns?', zh: '現代工業區位模式的特徵是甚麼？' },
+                        options: {
+                            en: ['Concentration near raw materials only', 'Dispersal based on multiple factors', 'Location only in urban centers', 'Avoidance of transportation networks'],
+                            zh: ['僅集中在原材料附近', '基於多種因素的分散', '僅位於城市中心', '避開運輸網絡']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Modern industries consider multiple factors including technology, markets, and workforce.', zh: '現代工業考慮多種因素，包括技術、市場和勞動力。' }
+                    }
+                ],
+                unit4: [
+                    {
+                        question: { en: 'What is the primary challenge of sustainable urban development?', zh: '可持續城市發展的主要挑戰是甚麼？' },
+                        options: {
+                            en: ['Increasing population density only', 'Balancing growth with environmental protection', 'Reducing all urban development', 'Focusing only on economic growth'],
+                            zh: ['僅增加人口密度', '平衡增長與環境保護', '減少所有城市發展', '僅關注經濟增長']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Sustainable development requires balancing economic growth with environmental conservation.', zh: '可持續發展需要平衡經濟增長和環境保護。' }
+                    },
+                    {
+                        question: { en: 'How do geographers assess urban environmental quality?', zh: '地理學家如何評估城市環境質素？' },
+                        options: {
+                            en: ['Only through satellite imagery', 'Using multiple measurement tools and surveys', 'Only through population data', 'Only through economic indicators'],
+                            zh: ['僅通過衛星圖像', '使用多種測量工具和調查', '僅通過人口數據', '僅通過經濟指標']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Environmental quality assessment requires multiple instruments and field observations.', zh: '環境質素評估需要多種儀器和實地觀察。' }
+                    },
+                    {
+                        question: { en: 'What indicates successful urban regeneration?', zh: '甚麼表明城市更新成功？' },
+                        options: {
+                            en: ['Increased traffic congestion', 'Improved building quality and community facilities', 'Higher population density only', 'More industrial development'],
+                            zh: ['交通擁堵增加', '建築質素和社區設施改善', '僅人口密度更高', '更多工業發展']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Successful regeneration improves living conditions and community infrastructure.', zh: '成功的更新改善生活條件和社區基礎設施。' }
+                    },
+                    {
+                        question: { en: 'Which urban problem requires measuring both social and environmental factors?', zh: '哪個城市問題需要測量社會和環境因素？' },
+                        options: {
+                            en: ['Traffic flow only', 'Urban decay and quality of life', 'Building heights only', 'Street lighting only'],
+                            zh: ['僅交通流量', '城市衰落和生活質素', '僅建築高度', '僅街道照明']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Urban decay involves both physical environmental deterioration and social issues.', zh: '城市衰落涉及物理環境惡化和社會問題。' }
+                    },
+                    {
+                        question: { en: 'What is essential for measuring urban sustainability?', zh: '測量城市可持續性的關鍵是甚麼？' },
+                        options: {
+                            en: ['Only economic indicators', 'Integrated social, economic, and environmental measures', 'Only population growth rates', 'Only building density'],
+                            zh: ['僅經濟指標', '整合社會、經濟和環境措施', '僅人口增長率', '僅建築密度']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Sustainability requires comprehensive assessment across all three dimensions.', zh: '可持續性需要跨所有三個維度的全面評估。' }
+                    }
+                ],
+                unit5: [
+                    {
+                        question: { en: 'What agricultural system component represents the "process" stage?', zh: '農業系統的哪個組成部分代表「過程」階段？' },
+                        options: {
+                            en: ['Seeds and fertilizers', 'Cultivation and irrigation methods', 'Harvest yields', 'Market prices'],
+                            zh: ['種子和肥料', '耕作和灌溉方法', '收穫產量', '市場價格']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Agricultural processes include all farming activities between inputs and outputs.', zh: '農業過程包括投入和產出之間的所有農業活動。' }
+                    },
+                    {
+                        question: { en: 'Which method most accurately determines soil texture?', zh: '哪種方法最準確地確定土壤質地？' },
+                        options: {
+                            en: ['Visual inspection only', 'Hand texture test and soil sieving', 'pH testing only', 'Weather measurement'],
+                            zh: ['僅視覺檢查', '手感測試和土壤篩分', '僅酸鹼度測試', '天氣測量']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Combined hand texture and sieving provide accurate soil particle size analysis.', zh: '結合手感測試和篩分提供準確的土壤顆粒大小分析。' }
+                    },
+                    {
+                        question: { en: 'What indicates sustainable agricultural practices?', zh: '甚麼表明可持續農業實踐？' },
+                        options: {
+                            en: ['Maximum chemical fertilizer use', 'Soil conservation and biodiversity protection', 'Monoculture farming only', 'Ignoring environmental impacts'],
+                            zh: ['最大化使用化學肥料', '土壤保護和生物多樣性保護', '僅單一栽培', '忽視環境影響']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Sustainable agriculture maintains soil health and ecosystem balance.', zh: '可持續農業維持土壤健康和生態系統平衡。' }
+                    },
+                    {
+                        question: { en: 'How do technological advances affect modern agriculture?', zh: '技術進步如何影響現代農業？' },
+                        options: {
+                            en: ['Only increase costs', 'Increase yields but may cause environmental issues', 'Have no significant impact', 'Only benefit large farms'],
+                            zh: ['僅增加成本', '增加產量但可能造成環境問題', '無顯著影響', '僅有利於大型農場']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Technology can boost productivity while potentially creating environmental challenges.', zh: '技術可以提高生產力，同時可能帶來環境挑戰。' }
+                    },
+                    {
+                        question: { en: 'What is the most critical factor for agricultural success in arid regions?', zh: '乾旱地區農業成功最關鍵的因素是甚麼？' },
+                        options: {
+                            en: ['Soil type only', 'Water management and irrigation', 'Temperature control', 'Market access only'],
+                            zh: ['僅土壤類型', '水資源管理和灌溉', '溫度控制', '僅市場接近性']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Water availability and management are crucial for agriculture in dry climates.', zh: '水資源可用性和管理對乾燥氣候下的農業至關重要。' }
+                    }
+                ],
+                unit6: [
+                    {
+                        question: { en: 'Why are quadrats essential for rainforest biodiversity studies?', zh: '為甚麼樣方對雨林生物多樣性研究至關重要？' },
+                        options: {
+                            en: ['They measure tree height only', 'They provide systematic and representative sampling', 'They count only large animals', 'They measure soil temperature'],
+                            zh: ['它們僅測量樹高', '它們提供系統和代表性抽樣', '它們僅計算大型動物', '它們測量土壤溫度']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Quadrats ensure systematic sampling across forest areas for accurate biodiversity assessment.', zh: '樣方確保跨森林區域的系統抽樣，以準確評估生物多樣性。' }
+                    },
+                    {
+                        question: { en: 'What does canopy density measurement reveal about forest health?', zh: '冠層密度測量揭示森林健康的甚麼？' },
+                        options: {
+                            en: ['Soil fertility only', 'Light penetration and ecosystem structure', 'Water pH levels', 'Animal migration patterns'],
+                            zh: ['僅土壤肥力', '光照穿透和生態系統結構', '水的酸鹼度', '動物遷徙模式']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Canopy density affects light levels, which influence understory growth and forest structure.', zh: '冠層密度影響光照水平，進而影響林下植物生長和森林結構。' }
+                    },
+                    {
+                        question: { en: 'How do researchers measure the impact of deforestation?', zh: '研究人員如何測量砍伐的影響？' },
+                        options: {
+                            en: ['Only count remaining trees', 'Assess soil erosion, biodiversity loss, and land use changes', 'Only measure timber volume', 'Only study economic impacts'],
+                            zh: ['僅計算剩餘樹木', '評估土壤侵蝕、生物多樣性喪失和土地利用變化', '僅測量木材體積', '僅研究經濟影響']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Deforestation impacts require comprehensive environmental and ecological assessment.', zh: '砍伐影響需要全面的環境和生態評估。' }
+                    },
+                    {
+                        question: { en: 'What tool is most appropriate for measuring tree trunk circumference?', zh: '測量樹幹圓周最合適的工具是甚麼？' },
+                        options: {
+                            en: ['Light meter', 'Measuring tape', 'pH strips', 'Thermometer'],
+                            zh: ['光密度計', '拉尺', '酸鹼度試紙', '溫度計']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Measuring tape provides accurate circumference measurements for tree trunk analysis.', zh: '拉尺為樹幹分析提供準確的圓周測量。' }
+                    },
+                    {
+                        question: { en: 'What makes tropical rainforests particularly vulnerable to human activities?', zh: '甚麼使熱帶雨林特別容易受到人類活動的影響？' },
+                        options: {
+                            en: ['Simple ecosystem structure', 'Complex interdependent ecosystem relationships', 'Low biodiversity', 'Fast regeneration capacity'],
+                            zh: ['簡單的生態系統結構', '複雜的相互依存生態系統關係', '低生物多樣性', '快速再生能力']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Complex interdependencies mean that small changes can have large ecosystem impacts.', zh: '複雜的相互依存關係意味著小變化可能對生態系統產生重大影響。' }
+                    }
+                ],
+                unit7: [
+                    {
+                        question: { en: 'What is the primary cause of urban heat island effects?', zh: '城市熱島效應的主要原因是甚麼？' },
+                        options: {
+                            en: ['Increased rainfall', 'Dark surfaces and reduced vegetation', 'Higher altitude', 'Ocean proximity'],
+                            zh: ['降雨增加', '深色表面和植被減少', '海拔更高', '海洋接近性']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Dark urban surfaces absorb more heat, while reduced vegetation decreases cooling.', zh: '深色城市表面吸收更多熱量，而植被減少降低了冷卻效果。' }
+                    },
+                    {
+                        question: { en: 'How should microclimate studies be conducted for reliable results?', zh: '應該如何進行微氣候研究以獲得可靠結果？' },
+                        options: {
+                            en: ['Single location measurement', 'Multiple locations across different land uses', 'Only urban center measurements', 'Only rural area measurements'],
+                            zh: ['單一位置測量', '跨不同土地利用的多個位置', '僅城市中心測量', '僅鄉郊地區測量']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Comparative measurements across different environments reveal microclimate variations.', zh: '跨不同環境的比較測量揭示微氣候變化。' }
+                    },
+                    {
+                        question: { en: 'Which factor most significantly influences urban microclimates?', zh: '哪個因素最顯著地影響城市微氣候？' },
+                        options: {
+                            en: ['Ocean currents', 'Building density and materials', 'Mountain ranges', 'Seasonal changes only'],
+                            zh: ['洋流', '建築密度和材料', '山脈', '僅季節變化']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Building density and construction materials greatly affect local temperature and wind patterns.', zh: '建築密度和建築材料極大地影響當地溫度和風型。' }
+                    },
+                    {
+                        question: { en: 'What evidence supports climate change at the local level?', zh: '甚麼證據支持當地層面的氣候變化？' },
+                        options: {
+                            en: ['Single day temperature readings', 'Long-term temperature and precipitation data trends', 'Short-term weather variations', 'Seasonal temperature changes only'],
+                            zh: ['單日溫度讀數', '長期溫度和降水數據趨勢', '短期天氣變化', '僅季節溫度變化']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Climate change evidence requires long-term data showing consistent trends over time.', zh: '氣候變化證據需要顯示長期一致趨勢的長期數據。' }
+                    },
+                    {
+                        question: { en: 'How does urban development affect local precipitation patterns?', zh: '城市發展如何影響當地降水模式？' },
+                        options: {
+                            en: ['No significant effect', 'Can increase convective rainfall due to heat islands', 'Always decreases rainfall', 'Only affects snowfall'],
+                            zh: ['無顯著影響', '由於熱島效應可能增加對流降雨', '總是減少降雨', '僅影響降雪']
+                        },
+                        correct: 1,
+                        explanation: { en: 'Urban heat islands can enhance convection and trigger increased local rainfall.', zh: '城市熱島可以增強對流並引發當地降雨增加。' }
+                    }
+                ]
+            }
+        };
+
+        // Global state
+        let currentSection = 'topics';
+        let selectedTopic = null;
+        let currentCardIndex = 0;
+        let currentCards = [];
+        let isCardFlipped = false;
+        let currentQuizTopic = null;
+        let currentQuestionIndex = 0;
+        let quizQuestions = [];
+        let quizScore = 0;
+        let userProgress = {};
+
+        // Initialize progress tracking
+        if (!localStorage.getItem('geographyProgress')) {
+            geographyData.topics.forEach(topic => {
+                userProgress[topic.id] = {
+                    flashcardsStudied: 0,
+                    quizzesTaken: 0,
+                    bestScore: 0,
+                    lastActivity: null
+                };
+            });
+            localStorage.setItem('geographyProgress', JSON.stringify(userProgress));
+        } else {
+            userProgress = JSON.parse(localStorage.getItem('geographyProgress'));
+        }
+
+        // Translation function
+        function translateText(key) {
+            return translations[currentLanguage][key] || key;
+        }
+
+        function updateTexts() {
+            Object.keys(translations[currentLanguage]).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.textContent = translateText(key);
+                }
+            });
+        }
+
+        // Language toggle
+        document.getElementById('language-toggle').addEventListener('click', () => {
+            currentLanguage = currentLanguage === 'en' ? 'zh' : 'en';
+            updateTexts();
+            
+            // Refresh current section content
+            if (currentSection === 'topics') {
+                populateTopics();
+            } else if (currentSection === 'flashcards') {
+                populateTopicSelectors();
+                if (selectedTopic) updateFlashcard();
+            } else if (currentSection === 'quiz') {
+                populateTopicSelectors();
+            } else if (currentSection === 'progress') {
+                updateProgressDisplay();
+            }
+        });
+
+        // Section navigation
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Update navigation tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(`${sectionName}-section`).classList.remove('hidden');
+            document.getElementById(`nav-${sectionName}`).classList.add('active');
+            
+            currentSection = sectionName;
+            
+            // Initialize section-specific content
+            if (sectionName === 'topics') {
+                populateTopics();
+            } else if (sectionName === 'flashcards') {
+                populateTopicSelectors();
+            } else if (sectionName === 'quiz') {
+                populateTopicSelectors();
+            } else if (sectionName === 'progress') {
+                updateProgressDisplay();
+            }
+        }
+
+        // Populate topics grid
+        function populateTopics() {
+            const grid = document.getElementById('topics-grid');
+            grid.innerHTML = '';
+            
+            geographyData.topics.forEach((topic, index) => {
+                const topicCard = document.createElement('div');
+                topicCard.className = `bg-gradient-to-br ${topic.color} text-white rounded-lg p-6 shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-300`;
+                topicCard.innerHTML = `
+                    <div class="mb-4">
+                        <h3 class="text-xl font-bold mb-2">${topic.title[currentLanguage]}</h3>
+                        <p class="text-sm opacity-90 mb-3">${topic.subtitle[currentLanguage]}</p>
+                        <p class="text-sm opacity-80">${topic.description[currentLanguage]}</p>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm opacity-75">${currentLanguage === 'en' ? 'Unit' : '單元'} ${index + 1}</span>
+                        <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
+                            ${currentLanguage === 'en' ? 'Study' : '學習'}
+                        </span>
+                    </div>
+                `;
+                
+                topicCard.addEventListener('click', () => {
+                    selectTopic(topic.id);
+                    showSection('flashcards');
+                });
+                
+                grid.appendChild(topicCard);
+            });
+        }
+
+        // Populate topic selectors
+        function populateTopicSelectors() {
+            const selectors = ['topic-selector', 'quiz-topic-selector'];
+            
+            selectors.forEach(selectorId => {
+                const selector = document.getElementById(selectorId);
+                if (selector) {
+                    selector.innerHTML = `<option value="">${currentLanguage === 'en' ? 'Select a topic...' : '選擇主題...'}</option>`;
+                    
+                    geographyData.topics.forEach((topic, index) => {
+                        const option = document.createElement('option');
+                        option.value = topic.id;
+                        option.textContent = `${currentLanguage === 'en' ? 'Unit' : '單元'} ${index + 1}: ${topic.title[currentLanguage]}`;
+                        selector.appendChild(option);
+                    });
+                }
+            });
+        }
+
+        // Select topic for flashcards
+        function selectTopic(topicId) {
+            selectedTopic = topicId;
+            currentCardIndex = 0;
+            currentCards = [...geographyData.flashcards[topicId]];
+            
+            document.getElementById('topic-selector').value = topicId;
+            document.getElementById('no-topic-selected').classList.add('hidden');
+            document.getElementById('flashcard-content').classList.remove('hidden');
+            
+            updateFlashcard();
+            updateProgress('flashcardsStudied', topicId);
+        }
+
+        // Update flashcard display
+        function updateFlashcard() {
+            if (!selectedTopic || currentCards.length === 0) return;
+            
+            const card = currentCards[currentCardIndex];
+            document.getElementById('card-question').textContent = card.question[currentLanguage];
+            document.getElementById('card-answer').textContent = card.answer[currentLanguage];
+            document.getElementById('card-counter').textContent = `${currentLanguage === 'en' ? 'Card' : '卡片'} ${currentCardIndex + 1} ${currentLanguage === 'en' ? 'of' : '共'} ${currentCards.length}`;
+            
+            // Update navigation buttons
+            document.getElementById('prev-card').disabled = currentCardIndex === 0;
+            document.getElementById('next-card').disabled = currentCardIndex === currentCards.length - 1;
+            
+            // Reset card flip
+            document.getElementById('flashcard').classList.remove('flipped');
+            isCardFlipped = false;
+        }
+
+        // Flashcard navigation
+        document.getElementById('prev-card').addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                updateFlashcard();
+            }
+        });
+
+        document.getElementById('next-card').addEventListener('click', () => {
+            if (currentCardIndex < currentCards.length - 1) {
+                currentCardIndex++;
+                updateFlashcard();
+            }
+        });
+
+        // Flip card
+        function flipCard() {
+            const flashcard = document.getElementById('flashcard');
+            flashcard.classList.toggle('flipped');
+            isCardFlipped = !isCardFlipped;
+        }
+
+        // Shuffle cards
+        function shuffleCards() {
+            currentCards = currentCards.sort(() => Math.random() - 0.5);
+            currentCardIndex = 0;
+            updateFlashcard();
+        }
+
+        // Topic selector change handlers
+        document.getElementById('topic-selector').addEventListener('change', (e) => {
+            if (e.target.value) {
+                selectTopic(e.target.value);
+            } else {
+                selectedTopic = null;
+                document.getElementById('no-topic-selected').classList.remove('hidden');
+                document.getElementById('flashcard-content').classList.add('hidden');
+            }
+        });
+
+        document.getElementById('quiz-topic-selector').addEventListener('change', (e) => {
+            currentQuizTopic = e.target.value;
+            document.getElementById('start-quiz-btn').disabled = !currentQuizTopic;
+        });
+
+        // Start quiz
+        document.getElementById('start-quiz-btn').addEventListener('click', () => {
+            if (!currentQuizTopic) return;
+            
+            quizQuestions = [...geographyData.quizzes[currentQuizTopic]];
+            quizQuestions = quizQuestions.sort(() => Math.random() - 0.5); // Shuffle questions
+            currentQuestionIndex = 0;
+            quizScore = 0;
+            
+            document.getElementById('quiz-start').classList.add('hidden');
+            document.getElementById('quiz-active').classList.remove('hidden');
+            document.getElementById('quiz-results').classList.add('hidden');
+            
+            showQuizQuestion();
+        });
+
+        // Show quiz question
+        function showQuizQuestion() {
+            if (currentQuestionIndex >= quizQuestions.length) {
+                showQuizResults();
+                return;
+            }
+            
+            const question = quizQuestions[currentQuestionIndex];
+            document.getElementById('current-question').textContent = question.question[currentLanguage];
+            document.getElementById('question-counter').textContent = `${currentLanguage === 'en' ? 'Question' : '問題'} ${currentQuestionIndex + 1} ${currentLanguage === 'en' ? 'of' : '共'} ${quizQuestions.length}`;
+            document.getElementById('score-display').textContent = `${currentLanguage === 'en' ? 'Score' : '分數'}: ${quizScore}/${currentQuestionIndex}`;
+            
+            const progress = ((currentQuestionIndex + 1) / quizQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            
+            // Create option buttons
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+            
+            question.options[currentLanguage].forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'quiz-option w-full text-left p-4 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-all duration-300';
+                button.textContent = option;
+                button.addEventListener('click', () => selectAnswer(index));
+                optionsContainer.appendChild(button);
+            });
+            
+            document.getElementById('next-question-btn').classList.add('hidden');
+        }
+
+        // Select answer
+        function selectAnswer(selectedIndex) {
+            const question = quizQuestions[currentQuestionIndex];
+            const isCorrect = selectedIndex === question.correct;
+            
+            if (isCorrect) {
+                quizScore++;
+            }
+            
+            // Show correct/incorrect styling
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach((option, index) => {
+                option.disabled = true;
+                if (index === question.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex && !isCorrect) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            // Show explanation if available
+            if (question.explanation) {
+                const explanationDiv = document.createElement('div');
+                explanationDiv.className = 'mt-4 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg';
+                explanationDiv.innerHTML = `<strong>${currentLanguage === 'en' ? 'Explanation:' : '解釋：'}</strong> ${question.explanation[currentLanguage]}`;
+                document.getElementById('quiz-options').appendChild(explanationDiv);
+            }
+            
+            document.getElementById('next-question-btn').classList.remove('hidden');
+        }
+
+        // Next question
+        document.getElementById('next-question-btn').addEventListener('click', () => {
+            currentQuestionIndex++;
+            showQuizQuestion();
+        });
+
+        // Show quiz results
+        function showQuizResults() {
+            document.getElementById('quiz-active').classList.add('hidden');
+            document.getElementById('quiz-results').classList.remove('hidden');
+            
+            const percentage = Math.round((quizScore / quizQuestions.length) * 100);
+            document.getElementById('final-score').textContent = `${quizScore}/${quizQuestions.length} (${percentage}%)`;
+            
+            let message;
+            if (percentage >= 90) {
+                message = currentLanguage === 'en' ? 'Excellent! You have mastered this topic.' : '優秀！您已掌握此主題。';
+            } else if (percentage >= 70) {
+                message = currentLanguage === 'en' ? 'Good job! You have a solid understanding.' : '做得好！您有良好的理解。';
+            } else if (percentage >= 50) {
+                message = currentLanguage === 'en' ? 'Not bad, but consider reviewing the material.' : '不錯，但建議複習材料。';
+            } else {
+                message = currentLanguage === 'en' ? 'You might want to study more before retaking.' : '您可能需要多學習再重試。';
+            }
+            
+            document.getElementById('results-message').textContent = message;
+            
+            updateProgress('quizzesTaken', currentQuizTopic, quizScore);
+        }
+
+        // Retake quiz
+        function retakeQuiz() {
+            document.getElementById('quiz-results').classList.add('hidden');
+            document.getElementById('quiz-start').classList.remove('hidden');
+        }
+
+        // Update progress
+        function updateProgress(action, topicId, score = null) {
+            if (!userProgress[topicId]) {
+                userProgress[topicId] = {
+                    flashcardsStudied: 0,
+                    quizzesTaken: 0,
+                    bestScore: 0,
+                    lastActivity: null
+                };
+            }
+            
+            if (action === 'flashcardsStudied') {
+                userProgress[topicId].flashcardsStudied++;
+            } else if (action === 'quizzesTaken') {
+                userProgress[topicId].quizzesTaken++;
+                if (score !== null) {
+                    const percentage = Math.round((score / quizQuestions.length) * 100);
+                    userProgress[topicId].bestScore = Math.max(userProgress[topicId].bestScore, percentage);
+                }
+            }
+            
+            userProgress[topicId].lastActivity = new Date().toISOString();
+            localStorage.setItem('geographyProgress', JSON.stringify(userProgress));
+        }
+
+        // Update progress display
+        function updateProgressDisplay() {
+            const progressList = document.getElementById('progress-list');
+            const activityList = document.getElementById('activity-list');
+            
+            progressList.innerHTML = '';
+            activityList.innerHTML = '';
+            
+            // Overall progress
+            geographyData.topics.forEach((topic, index) => {
+                const progress = userProgress[topic.id] || { flashcardsStudied: 0, quizzesTaken: 0, bestScore: 0 };
+                
+                const progressItem = document.createElement('div');
+                progressItem.className = 'mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg';
+                progressItem.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-semibold">${currentLanguage === 'en' ? 'Unit' : '單元'} ${index + 1}: ${topic.title[currentLanguage]}</h4>
+                        <span class="text-sm text-gray-600 dark:text-gray-400">${progress.bestScore}%</span>
+                    </div>
+                    <div class="flex gap-4 text-sm text-gray-600 dark:text-gray-400">
+                        <span>${currentLanguage === 'en' ? 'Flashcards:' : '閃卡：'} ${progress.flashcardsStudied}</span>
+                        <span>${currentLanguage === 'en' ? 'Quizzes:' : '測驗：'} ${progress.quizzesTaken}</span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 mt-2">
+                        <div class="bg-blue-500 h-2 rounded-full" style="width: ${Math.min(progress.bestScore, 100)}%"></div>
+                    </div>
+                `;
+                progressList.appendChild(progressItem);
+            });
+            
+            // Recent activity
+            const activities = [];
+            Object.keys(userProgress).forEach(topicId => {
+                const progress = userProgress[topicId];
+                if (progress.lastActivity) {
+                    const topic = geographyData.topics.find(t => t.id === topicId);
+                    activities.push({
+                        topic: topic.title[currentLanguage],
+                        date: new Date(progress.lastActivity),
+                        score: progress.bestScore
+                    });
+                }
+            });
+            
+            activities.sort((a, b) => b.date - a.date);
+            activities.slice(0, 5).forEach(activity => {
+                const activityItem = document.createElement('div');
+                activityItem.className = 'p-3 bg-gray-50 dark:bg-gray-700 rounded-lg';
+                activityItem.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium">${activity.topic}</span>
+                        <span class="text-sm text-gray-600 dark:text-gray-400">${activity.score}%</span>
+                    </div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                        ${activity.date.toLocaleDateString(currentLanguage === 'en' ? 'en-US' : 'zh-HK')}
+                    </div>
+                `;
+                activityList.appendChild(activityItem);
+            });
+            
+            if (activities.length === 0) {
+                activityList.innerHTML = `<p class="text-gray-500 dark:text-gray-400 text-center py-4">${currentLanguage === 'en' ? 'No recent activity' : '沒有最近活動'}</p>`;
+            }
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            populateTopics();
+            populateTopicSelectors();
+            updateTexts();
+        });
+    </script>
+
+
+</body>
+<!-- Footer -->
+<footer class="bg-gray-100 dark:bg-gray-800 py-6 mt-12 border-t border-gray-200 dark:border-gray-700">
+    <div class="container mx-auto px-4 text-center text-sm text-gray-600 dark:text-gray-400">
+        <p>Created with Poe App Builder • Redesigned by DeepSeek • Hosted on Cloudflare • All data from EDB</p>
+        <p>🄯 Copyleft 2025 <a href="https://github.com/hitoriyo" class="hover:underline" target="_blank" rel="noopener noreferrer">hitori_hkll</a> • Some rights reversed</p>
+    </div>
+</footer>
+</html>
